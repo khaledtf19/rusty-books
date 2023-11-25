@@ -1,6 +1,7 @@
-use std::error::Error;
 use sqlx::Row;
+use std::error::Error;
 
+#[derive(Debug)]
 pub struct Book {
     pub title: String,
     pub author: String,
@@ -28,16 +29,19 @@ async fn update(book: &Book, isbn: &str, pool: &sqlx::PgPool) -> Result<(), Box<
     Ok(())
 }
 
-async fn read(pool: &sqlx::PgPool)-> Result<Book, Box<dyn Error>> {
+async fn read(pool: &sqlx::PgPool) -> Result<Vec<Book>, Box<dyn Error>> {
     let q = "SELECT title, author, isbn FROM book";
     let query = sqlx::query(q);
-    let row = query.fetch_one(pool).await?;
-    let book = Book {
-        title: row.get("title"),
-        author: row.get("author"),
-        isbn: row.get("isbn")
-    };
-    Ok(book)
+    let rows = query.fetch_all(pool).await?;
+    let books = rows
+        .iter()
+        .map(|row| Book {
+            title: row.get("title"),
+            author: row.get("author"),
+            isbn: row.get("isbn"),
+        })
+        .collect();
+    Ok(books)
 }
 
 #[tokio::main]
@@ -48,12 +52,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     sqlx::migrate!("./migrations").run(&pool).await?;
 
     // let book = Book {
-    //     title: String::from("Salem's Lot 2"),
+    //     title: String::from("Salem's Lot 3"),
     //     author: String::from("Stephen king"),
     //     isbn: String::from("978-0-385-00751-1"),
     // };
-    // update(&book, &book.isbn, &pool).await?;
-    let book = read(&pool).await?;
-    println!("{}", book.title);
+    // create(&book, &pool).await?;
+    let books = read(&pool).await?;
+    println!("{:?}", books);
     Ok(())
 }
