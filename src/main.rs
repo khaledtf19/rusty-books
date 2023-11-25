@@ -1,7 +1,7 @@
-use sqlx::Row;
+use sqlx::{Row, FromRow};
 use std::error::Error;
 
-#[derive(Debug)]
+#[derive(Debug, FromRow)]
 pub struct Book {
     pub title: String,
     pub author: String,
@@ -31,16 +31,9 @@ async fn update(book: &Book, isbn: &str, pool: &sqlx::PgPool) -> Result<(), Box<
 
 async fn read(pool: &sqlx::PgPool) -> Result<Vec<Book>, Box<dyn Error>> {
     let q = "SELECT title, author, isbn FROM book";
-    let query = sqlx::query(q);
+    let query = sqlx::query_as::<_, Book>(q);
     let rows = query.fetch_all(pool).await?;
-    let books = rows
-        .iter()
-        .map(|row| Book {
-            title: row.get("title"),
-            author: row.get("author"),
-            isbn: row.get("isbn"),
-        })
-        .collect();
+
     Ok(books)
 }
 
@@ -57,6 +50,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     //     isbn: String::from("978-0-385-00751-1"),
     // };
     // create(&book, &pool).await?;
+
     let books = read(&pool).await?;
     println!("{:?}", books);
     Ok(())
