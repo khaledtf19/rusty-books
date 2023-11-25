@@ -20,11 +20,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
     
     sqlx::migrate!("./migrations").run(&conn).await?;
 
-    let res = sqlx::query("SELECT 1 + 1 as sum")
-        .fetch_one(&conn)
-        .await?;
-        
-    let sum:i32 = res.get("sum") ;
-    println!("1+1 = {}", sum);
+    let book = Book {
+        title: String::from("Salem's Lot"),
+        author: String::from("Stephen king"),
+        isbn: String::from("978-0-385-00751-1")
+    };
+    create(&book, &conn).await?;
     Ok(())
 }
