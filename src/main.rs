@@ -34,7 +34,7 @@ async fn read(pool: &sqlx::PgPool) -> Result<Vec<Book>, Box<dyn Error>> {
     let query = sqlx::query_as::<_, Book>(q);
     let rows = query.fetch_all(pool).await?;
 
-    Ok(books)
+    Ok(rows)
 }
 
 #[tokio::main]
